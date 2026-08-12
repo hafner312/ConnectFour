@@ -3,6 +3,7 @@ html, body {
     background: #f4f1ea;
     min-height: 100vh;
     margin: 0;
+    overflow-x: hidden;
 }
 
 a, .btn-link {
