@@ -1,23 +1,19 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+<header class="site-header">
+    <span class="site-title">🔴 Vier Gewinnt 🟡</span>
+</header>
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div>
+<main>
+    <article class="content">
+        @Body
+    </article>
+</main>
 
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
-</div>
+<footer class="site-footer">Ein Projekt von Patrik Hafner</footer>
 
 <div id="blazor-error-ui">
-    An unhandled error has occurred.
-    <a href="" class="reload">Reload</a>
+    Ein unerwarteter Fehler ist aufgetreten.
+    <a href="" class="reload">Neu laden</a>
     <a class="dismiss">🗙</a>
 </div>

@@ -11,52 +11,80 @@
     </style>
 </HeadContent>
 
-<nav>
-    @for (byte i = 0; i < 7; i++)
-    {
-        var col = i;
-        <span title="Click to play a piece" @onclick="() => PlayPiece(col)">🔽</span>
-    }
-</nav>
-
-<article>
-    @winnerMessage
-    <button style="@ResetStyle" @onclick="ResetGame">Reset the game</button>
-    <br />
-    <span class="alert-danger">@errorMessage</span>
-    <span class="alert-info">@CurrentTurn</span>
-</article>
-
-<div>
-    <div class="board">
-        @for (var i = 0; i < 42; i++)
-        {
-            <span class="container">
-                <span></span>
-            </span>
-        }
+<div class="game-header">
+    <div class="scoreboard">
+        <div class="score-chip player1-chip">
+            <span class="dot"></span> Spieler 1
+            <strong>@State.Player1Wins</strong>
+        </div>
+        <div class="score-chip tie-chip">
+            Unentschieden
+            <strong>@State.Ties</strong>
+        </div>
+        <div class="score-chip player2-chip">
+            <span class="dot"></span> Spieler 2
+            <strong>@State.Player2Wins</strong>
+        </div>
     </div>
 
-    @for (var i = 0; i < 42; i++)
+    @if (winnerMessage != string.Empty)
     {
-        <span class="@pieces[i]"></span>
+        <div class="winner-banner @WinnerBannerClass">
+            @winnerMessage
+            <button class="btn btn-light btn-sm" @onclick="ResetGame">Neues Spiel</button>
+        </div>
+    }
+    else
+    {
+        <div class="turn-indicator @TurnClass">
+            <span class="dot"></span> @CurrentTurn
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="error-banner">@errorMessage</div>
     }
 </div>
 
+<div class="board-wrap">
+    <div class="columns">
+        @for (byte i = 0; i < 7; i++)
+        {
+            var col = i;
+            <button class="column-btn" disabled="@IsGameOver" title="Stein in Spalte @(col + 1) einwerfen" @onclick="() => PlayPiece(col)">🔽</button>
+        }
+    </div>
+
+    <div class="board">
+        @for (var index = 0; index < 42; index++)
+        {
+            var cellIndex = index;
+            var cellState = State.TheBoard[cellIndex];
+            <div class="cell">
+                <div class="disc @CellClass(cellState) @(IsWinningCell(cellIndex) ? "winner" : "")" @key="@($"{cellIndex}-{cellState}")"></div>
+            </div>
+        }
+    </div>
+</div>
+
 @code {
-    private string[] pieces = new string[42];
     private string winnerMessage = string.Empty;
     private string errorMessage = string.Empty;
+    private bool scoreRecorded;
 
-    private string CurrentTurn =>
-        (winnerMessage == string.Empty)
-            ? $"Player {State.PlayerTurn}'s Turn"
-            : "";
+    private bool IsGameOver => winnerMessage != string.Empty;
 
-    private string ResetStyle =>
-        (winnerMessage == string.Empty)
-            ? "display: none;"
-            : "";
+    private string CurrentTurn => $"Spieler {State.PlayerTurn} ist am Zug";
+
+    private string TurnClass => State.PlayerTurn == 1 ? "player1-turn" : "player2-turn";
+
+    private string WinnerBannerClass => State.CheckForWin() switch
+    {
+        GameState.WinState.Player1_Wins => "player1-turn",
+        GameState.WinState.Player2_Wins => "player2-turn",
+        _ => "tie-banner"
+    };
 
     [Parameter]
     public Color BoardColor { get; set; } = ColorTranslator.FromHtml("yellow");
@@ -72,36 +100,50 @@
         State.ResetBoard();
     }
 
+    private static string CellClass(int cellState) => cellState switch
+    {
+        1 => "player1",
+        2 => "player2",
+        _ => "empty"
+    };
+
+    private bool IsWinningCell(int index) =>
+        State.WinningLine != null && Array.IndexOf(State.WinningLine, index) >= 0;
+
     private void PlayPiece(byte col)
     {
         errorMessage = string.Empty;
 
         try
         {
-            var player = State.PlayerTurn;
-            var turn = State.CurrentTurn;
-            var landingRow = State.PlayPiece(col);
-
-            pieces[turn] = $"player{player} col{col} drop{landingRow}";
+            State.PlayPiece(col);
         }
         catch (ArgumentException ex)
         {
             errorMessage = ex.Message;
         }
-        winnerMessage = State.CheckForWin() switch
+
+        var result = State.CheckForWin();
+        winnerMessage = result switch
         {
-            GameState.WinState.Player1_Wins => "Player 1 Wins!",
-            GameState.WinState.Player2_Wins => "Player 2 Wins!",
-            GameState.WinState.Tie => "It's a tie!",
+            GameState.WinState.Player1_Wins => "🎉 Spieler 1 gewinnt!",
+            GameState.WinState.Player2_Wins => "🎉 Spieler 2 gewinnt!",
+            GameState.WinState.Tie => "🤝 Unentschieden!",
             _ => ""
         };
+
+        if (result != GameState.WinState.No_Winner && !scoreRecorded)
+        {
+            State.RecordResult(result);
+            scoreRecorded = true;
+        }
     }
 
     private void ResetGame()
     {
         winnerMessage = string.Empty;
         errorMessage = string.Empty;
-        pieces = new string[42];
+        scoreRecorded = false;
         State.ResetBoard();
     }
 }

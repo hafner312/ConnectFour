@@ -31,6 +31,30 @@ public class GameState
 
     public static readonly List<int[]> WinningPlaces = new();
 
+    /// <summary>
+    /// Die vier Brett-Positionen der aktuellen Gewinnreihe, sobald CheckForWin()
+    /// einen Sieger gefunden hat. Wird für die visuelle Hervorhebung genutzt.
+    /// </summary>
+    public int[]? WinningLine { get; private set; }
+
+    public int Player1Wins { get; private set; }
+    public int Player2Wins { get; private set; }
+    public int Ties { get; private set; }
+
+    /// <summary>
+    /// Trägt das Ergebnis einer beendeten Partie in den Spielstand ein.
+    /// Muss vom Aufrufer genau einmal pro Partie aufgerufen werden.
+    /// </summary>
+    public void RecordResult(WinState result)
+    {
+        switch (result)
+        {
+            case WinState.Player1_Wins: Player1Wins++; break;
+            case WinState.Player2_Wins: Player2Wins++; break;
+            case WinState.Tie: Ties++; break;
+        }
+    }
+
     public static void CalculateWinningPlaces()
     {
 
@@ -139,7 +163,11 @@ public class GameState
                 TheBoard[scenario[1]] ==
                 TheBoard[scenario[2]] &&
                 TheBoard[scenario[2]] ==
-                TheBoard[scenario[3]]) return (WinState)TheBoard[scenario[0]];
+                TheBoard[scenario[3]])
+            {
+                WinningLine = scenario;
+                return (WinState)TheBoard[scenario[0]];
+            }
 
         }
 
@@ -158,10 +186,10 @@ public class GameState
     {
 
         // Check for a current win
-        if (CheckForWin() != 0) throw new ArgumentException("Game is over");
+        if (CheckForWin() != 0) throw new ArgumentException("Die Partie ist bereits beendet.");
 
         // Check the column
-        if (TheBoard[column] != 0) throw new ArgumentException("Column is full");
+        if (TheBoard[column] != 0) throw new ArgumentException("Diese Spalte ist voll.");
 
         // Drop the piece in
         var landingSpot = column;
@@ -182,6 +210,7 @@ public class GameState
     public void ResetBoard()
     {
         TheBoard = new List<int>(new int[42]);
+        WinningLine = null;
     }
 
     private byte ConvertLandingSpotToRow(int landingSpot)

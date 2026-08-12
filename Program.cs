@@ -4,7 +4,10 @@ using ConnectFour.Components;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddSingleton<GameState>();
+// Scoped statt Singleton: pro Blazor-Circuit (= pro Besucher/Tab) ein
+// eigenes Spielbrett. Mit Singleton wuerden sich alle gleichzeitigen
+// Besucher ein einziges, gemeinsames Spiel teilen.
+builder.Services.AddScoped<GameState>();
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
