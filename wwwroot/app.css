@@ -4,6 +4,15 @@ html, body {
     min-height: 100vh;
     margin: 0;
     overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
+}
+
+/* Sticky-Footer-Layout: der Footer sitzt immer am unteren Rand, auch wenn die
+   Seite kurz ist - und rutscht bei langem Inhalt normal mit nach unten. */
+body {
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
 }
 
 a, .btn-link {
